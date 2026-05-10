@@ -18,9 +18,10 @@ export class AuthController {
     return this.authService.login(body);
   }
 
+  // هادا هو الرابط المحمي اللي كان ناقصنا
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
-  getProfile(@Request() req: any) { // زدنا any هنا
+  getProfile(@Request() req: any) {
     return {
       message: "مرحباً بك في البروفايل ديالك المحمي!",
       user: req.user
