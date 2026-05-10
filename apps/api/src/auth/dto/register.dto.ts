@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsOptional, IsString, MinLength, IsIn } from 'class-validator';
 
 export class RegisterDto {
   @IsEmail({}, { message: 'الإيميل غير صحيح' })
@@ -15,4 +15,10 @@ export class RegisterDto {
   @IsString()
   @IsNotEmpty({ message: 'الاسم العائلي ضروري' })
   lastName: string;
+
+  // زدنا هاد الجزء باش TypeScript و class-validator يقبلو الـ role
+  @IsOptional()
+  @IsString()
+  @IsIn(['STUDENT', 'TEACHER', 'ADMIN'], { message: 'الرتبة غير صحيحة' })
+  role?: 'STUDENT' | 'TEACHER' | 'ADMIN';
 }
