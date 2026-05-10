@@ -31,7 +31,7 @@ export default function RegisterPage() {
     
     try {
       // كنصيفطو المعلومات للباكاند ديالنا (NestJS) اللي خدام فـ 3000
-      const res = await fetch('http://localhost:3000/auth/register', {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
