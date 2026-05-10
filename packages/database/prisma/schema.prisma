@@ -13,19 +13,13 @@ enum Role {
   ADMIN
 }
 
-enum TeachingMode {
-  ONLINE
-  IN_PERSON
-  BOTH
-}
-
 enum RequestStatus {
   PENDING
   ACCEPTED
   REJECTED
-  COMPLETED
 }
 
+// 1. جدول المستخدمين
 model User {
   id               String          @id @default(uuid())
   email            String          @unique
@@ -38,94 +32,42 @@ model User {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
+  // العلاقات
   teacherProfile   TeacherProfile?
-  studentProfile   StudentProfile?
-  sentMessages     Message[]       @relation("SentMessages")
-  conversations    Conversation[]  @relation("UserConversations")
-}
-
-model TeacherProfile {
-  id               String          @id @default(uuid())
-  userId           String          @unique
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  bio              String?         @db.Text
-  experience       Int?
-  hourlyRate       Float?
-  teachingMode     TeachingMode    @default(BOTH)
-  city             String?
-  languages        String[]
-  isAvailable      Boolean         @default(true)
-  
-  subjects         TeacherSubject[]
-  requestsReceived LessonRequest[] @relation("TeacherRequests")
-  documents        Document[]
-}
-
-model StudentProfile {
-  id               String          @id @default(uuid())
-  userId           String          @unique
-  user             User            @relation(fields: [userId], references: [id], onDelete: Cascade)
-  educationLevel   String?
-  
   requestsSent     LessonRequest[] @relation("StudentRequests")
+  requestsReceived LessonRequest[] @relation("TeacherRequests")
 }
 
+// 2. جدول المواد (الرياضيات، الفيزياء...)
 model Subject {
-  id               String           @id @default(uuid())
-  name             String           @unique
-  teachers         TeacherSubject[]
+  id       String           @id @default(uuid())
+  name     String           @unique
+  teachers TeacherProfile[]
 }
 
-model TeacherSubject {
-  teacherId        String
-  subjectId        String
-  teacher          TeacherProfile   @relation(fields: [teacherId], references: [id], onDelete: Cascade)
-  subject          Subject          @relation(fields: [subjectId], references: [id], onDelete: Cascade)
-
-  @@id([teacherId, subjectId])
-}
-
-model LessonRequest {
-  id               String          @id @default(uuid())
-  studentId        String
-  teacherId        String
-  status           RequestStatus   @default(PENDING)
-  message          String?         @db.Text
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
-
-  student          StudentProfile  @relation("StudentRequests", fields: [studentId], references: [id])
-  teacher          TeacherProfile  @relation("TeacherRequests", fields: [teacherId], references: [id])
-}
-
-model Conversation {
-  id               String          @id @default(uuid())
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+// 3. جدول بروفايل الأستاذ
+model TeacherProfile {
+  id          String   @id @default(uuid())
+  userId      String   @unique
+  user        User     @relation(fields: [userId], references: [id])
   
-  users            User[]          @relation("UserConversations")
-  messages         Message[]
+  bio         String?  
+  hourlyPrice Float?   
+  city        String?  
+  
+  subjectId   String?
+  subject     Subject? @relation(fields: [subjectId], references: [id])
 }
 
-model Message {
-  id               String          @id @default(uuid())
-  content          String          @db.Text
-  senderId         String
-  conversationId   String
-  isRead           Boolean         @default(false)
-  createdAt        DateTime        @default(now())
-
-  sender           User            @relation("SentMessages", fields: [senderId], references: [id])
-  conversation     Conversation    @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-}
-
-model Document {
-  id               String          @id @default(uuid())
-  teacherId        String
-  fileUrl          String
-  fileName         String
-  isVerified       Boolean         @default(false)
-  createdAt        DateTime        @default(now())
-
-  teacher          TeacherProfile  @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+// 4. جدول طلبات الدروس
+model LessonRequest {
+  id          String        @id @default(uuid())
+  studentId   String
+  student     User          @relation("StudentRequests", fields: [studentId], references: [id])
+  
+  teacherId   String
+  teacher     User          @relation("TeacherRequests", fields: [teacherId], references: [id])
+  
+  status      RequestStatus @default(PENDING) 
+  createdAt   DateTime      @default(now())
 }
