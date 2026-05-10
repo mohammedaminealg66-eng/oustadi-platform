@@ -29,6 +29,7 @@ model User {
   role             Role            @default(STUDENT)
   isVerified       Boolean         @default(false)
   profileImage     String?
+  city             String?         // تزادت هنا
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -36,6 +37,7 @@ model User {
   teacherProfile   TeacherProfile?
   requestsSent     LessonRequest[] @relation("StudentRequests")
   requestsReceived LessonRequest[] @relation("TeacherRequests")
+  favorites        Favorite[]      // تزادت هنا
 }
 
 // 2. جدول المواد (الرياضيات، الفيزياء...)
@@ -47,27 +49,43 @@ model Subject {
 
 // 3. جدول بروفايل الأستاذ
 model TeacherProfile {
-  id          String   @id @default(uuid())
-  userId      String   @unique
-  user        User     @relation(fields: [userId], references: [id])
-  
-  bio         String?  
-  hourlyPrice Float?   
-  city        String?  
-  
+  id          String     @id @default(uuid())
+  userId      String     @unique
+  user        User       @relation(fields: [userId], references: [id])
+
+  bio         String?
+  hourlyPrice Float?
+  city        String?
+
   subjectId   String?
-  subject     Subject? @relation(fields: [subjectId], references: [id])
+  subject     Subject?   @relation(fields: [subjectId], references: [id])
+  
+  favoritedBy Favorite[] // تزادت هنا
 }
 
 // 4. جدول طلبات الدروس
 model LessonRequest {
-  id          String        @id @default(uuid())
-  studentId   String
-  student     User          @relation("StudentRequests", fields: [studentId], references: [id])
+  id        String        @id @default(uuid())
+  studentId String
+  student   User          @relation("StudentRequests", fields: [studentId], references: [id])
+
+  teacherId String
+  teacher   User          @relation("TeacherRequests", fields: [teacherId], references: [id])
+
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+}
+
+// 5. جدول المفضلة (الجديد)
+model Favorite {
+  id               String         @id @default(uuid())
+  userId           String
+  user             User           @relation(fields: [userId], references: [id])
   
-  teacherId   String
-  teacher     User          @relation("TeacherRequests", fields: [teacherId], references: [id])
+  teacherProfileId String
+  teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id])
   
-  status      RequestStatus @default(PENDING) 
-  createdAt   DateTime      @default(now())
+  createdAt        DateTime       @default(now())
+
+  @@unique([userId, teacherProfileId])
 }
