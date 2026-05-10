@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, Query } from '@nestjs/common';
 import { TeachersService } from './teachers.service';
 import { CreateTeacherDto } from './dto/create-teacher.dto';
 import { AuthGuard } from '@nestjs/passport';
@@ -9,18 +9,26 @@ import { Roles } from '../auth/decorators/roles.decorator';
 export class TeachersController {
   constructor(private readonly teachersService: TeachersService) {}
 
-  // 1. الأستاذ كيقاد البروفايل ديالو (هاد الرابط محمي وخاص غير بالأساتذة)
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles('TEACHER')
   @Post('profile')
   createProfile(@Request() req: any, @Body() createTeacherDto: CreateTeacherDto) {
-    // كنجبدو الـ ID ديال المستخدم مباشرة من التوكن (أمان كتر)
     return this.teachersService.createOrUpdateProfile(req.user.userId, createTeacherDto);
   }
 
-  // 2. جلب كاع الأساتذة (مفتوح للعموم باش التلامذ يقلبو)
+  // جلب الأساتذة مع إمكانية البحث والفلترة
   @Get()
-  findAll() {
-    return this.teachersService.findAll();
+  findAll(
+    @Query('city') city?: string,
+    @Query('subjectId') subjectId?: string,
+    @Query('minPrice') minPrice?: number,
+    @Query('maxPrice') maxPrice?: number,
+  ) {
+    return this.teachersService.findAll({ 
+      city, 
+      subjectId, 
+      minPrice, 
+      maxPrice 
+    });
   }
 }

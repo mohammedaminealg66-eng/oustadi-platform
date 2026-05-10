@@ -6,7 +6,6 @@ import { PrismaService } from '../prisma.service';
 export class TeachersService {
   constructor(private prisma: PrismaService) {}
 
-  // هاد الدالة كتصاوب بروفايل للأستاذ، وإيلا كان ديجا عندو كدير ليه التحديث (upsert)
   async createOrUpdateProfile(userId: string, dto: CreateTeacherDto) {
     return this.prisma.teacherProfile.upsert({
       where: { userId },
@@ -26,12 +25,27 @@ export class TeachersService {
     });
   }
 
-  // هاد الدالة كتجيب كاع الأساتذة مع المعلومات ديالهم
-  findAll() {
+  // الدالة مطورة باش تقبل الفلترة
+  async findAll(query: { city?: string; subjectId?: string; minPrice?: number; maxPrice?: number }) {
     return this.prisma.teacherProfile.findMany({
+      where: {
+        // الفلترة بالمدينة والمادة (إيلا وجدوا)
+        city: query.city || undefined,
+        subjectId: query.subjectId || undefined,
+        // الفلترة بمجال الثمن
+        hourlyPrice: {
+          gte: query.minPrice ? Number(query.minPrice) : undefined,
+          lte: query.maxPrice ? Number(query.maxPrice) : undefined,
+        },
+      },
       include: {
         user: {
-          select: { firstName: true, lastName: true, profileImage: true, email: true }
+          select: { 
+            firstName: true, 
+            lastName: true, 
+            profileImage: true, 
+            email: true 
+          }
         },
         subject: true,
       }
