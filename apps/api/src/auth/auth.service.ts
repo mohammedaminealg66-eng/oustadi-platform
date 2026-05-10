@@ -24,7 +24,6 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const newUser = await this.prisma.user.create({
-      // السطر اللي زدنا هنا هو "role: data.role" باش نحترم اختيار المستخدم
       data: {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -57,7 +56,6 @@ export class AuthService {
       throw new HttpException('البريد الإلكتروني أو كلمة السر غير صحيحة', HttpStatus.UNAUTHORIZED);
     }
 
-    // هنا الـ payload ديجا فيه الـ role، هادشي مزيان
     const payload = { sub: user.id, email: user.email, role: user.role };
     const token = await this.jwtService.signAsync(payload);
 
@@ -68,5 +66,13 @@ export class AuthService {
       access_token: token,
       user: userWithoutPassword,
     };
+  }
+
+  // --- السطر اللي خاصك تزيد هو هاد الدالة لتحت ---
+  async updateProfileImage(userId: string, imageUrl: string) {
+    return this.prisma.user.update({
+      where: { id: userId },
+      data: { profileImage: imageUrl },
+    });
   }
 }
