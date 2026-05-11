@@ -11,6 +11,6 @@ async function bootstrap() {
   // تفعيل Cors باش الفورانتاند يقدر يهضر مع الباكاند
   app.enableCors();
 
-await app.listen(3000, '0.0.0.0');
+await app.listen(3001, '0.0.0.0');
 }
 bootstrap();
