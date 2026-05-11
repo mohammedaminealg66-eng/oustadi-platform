@@ -17,7 +17,7 @@ export default function DashboardPage() {
       // 1. جلب التوكن من localStorage
       const token = localStorage.getItem('accessToken');
       
-      // 2. حماية الصفحة: إذا لم يوجد توكن، ارجع لصفحة تسجيل الدخول
+      // 2. حماية الصفحة
       if (!token) {
         router.push('/login');
         return;
@@ -26,7 +26,7 @@ export default function DashboardPage() {
       try {
         const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
         
-        // 3. طلب بيانات البروفايل من الباكاند
+        // 3. طلب بيانات البروفايل
         const res = await fetch(`${apiUrl}/auth/profile`, {
           method: 'GET',
           headers: {
@@ -38,14 +38,12 @@ export default function DashboardPage() {
         if (res.ok) {
           const userData = await res.json();
           
-          // --- السطر المهم للتشخيص ---
           console.log("المعلومات اللي جات من الباكاند:", userData);
-          // --------------------------
 
-          setUser(userData); 
+          // التعديل المهم هنا: كنمشيو لـ userData.user حيت الباكاند كيغلف المعلومات تما
+          setUser(userData.user); 
         } else {
-          // إذا كان التوكن غير صالح أو منتهي الصلاحية
-          console.error("فشل في جلب البيانات، التوكن قد يكون غير صالح");
+          console.error("فشل في جلب البيانات");
           localStorage.removeItem('accessToken');
           router.push('/login');
         }
@@ -59,13 +57,11 @@ export default function DashboardPage() {
     fetchProfile();
   }, [router]);
 
-  // دالة تسجيل الخروج
   const handleLogout = () => {
     localStorage.removeItem('accessToken');
     router.push('/login');
   };
 
-  // حالة التحميل
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen bg-gray-50">
@@ -74,14 +70,13 @@ export default function DashboardPage() {
     );
   }
 
-  // إذا لم تنجح عملية جلب اليوزر
   if (!user) return null; 
 
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       <div className="max-w-4xl mx-auto space-y-6">
         
-        {/* Header / Navbar */}
+        {/* Header */}
         <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border">
           <h1 className="text-2xl font-bold text-blue-600">أستادي | Oustadi</h1>
           <Button onClick={handleLogout} variant="outline" className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700">
@@ -91,6 +86,7 @@ export default function DashboardPage() {
 
         {/* Welcome Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm border">
+          {/* دابا user.firstName غتخدم حيت خدينا المعلومات من وسط userData.user */}
           <h2 className="text-3xl font-bold text-gray-800">
             مرحباً، {user.firstName || ''} {user.lastName || ''} 👋
           </h2>
@@ -101,7 +97,7 @@ export default function DashboardPage() {
           </p>
         </div>
 
-        {/* Role-based Dashboard Content */}
+        {/* Dashboard Content */}
         {user.role === 'TEACHER' ? (
           <Card className="border-t-4 border-t-blue-500 shadow-md">
             <CardHeader>
@@ -133,7 +129,6 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
         )}
-
       </div>
     </div>
   );

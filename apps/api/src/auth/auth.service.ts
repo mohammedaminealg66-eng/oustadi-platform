@@ -12,6 +12,7 @@ export class AuthService {
     private jwtService: JwtService,
   ) {}
 
+  // 1. تسجيل مستخدم جديد
   async register(data: RegisterDto) {
     const userExists = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -41,6 +42,7 @@ export class AuthService {
     };
   }
 
+  // 2. تسجيل الدخول
   async login(data: LoginDto) {
     const user = await this.prisma.user.findUnique({
       where: { email: data.email },
@@ -68,7 +70,31 @@ export class AuthService {
     };
   }
 
-  // --- السطر اللي خاصك تزيد هو هاد الدالة لتحت ---
+  // 3. جلب معلومات البروفايل كاملة (هادي هي اللي كانت ناقصاك)
+  async getProfile(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        email: true,
+        firstName: true,
+        lastName: true,
+        role: true,
+        profileImage: true, // زدتها حيت كاين عندك فالداتابيس
+      },
+    });
+
+    if (!user) {
+      throw new HttpException('المستخدم غير موجود', HttpStatus.NOT_FOUND);
+    }
+
+    return {
+      message: 'مرحباً بك في البروفايل ديالك المحمي!',
+      user: user,
+    };
+  }
+
+  // 4. تحديث صورة البروفايل
   async updateProfileImage(userId: string, imageUrl: string) {
     return this.prisma.user.update({
       where: { id: userId },
