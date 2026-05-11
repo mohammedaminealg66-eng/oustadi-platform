@@ -23,20 +23,11 @@ export class AuthController {
     return this.authService.login(body);
   }
 
-  // --- التعديل هنا: كنعيطو لـ getProfile اللي فـ AuthService ---
   @UseGuards(AuthGuard('jwt'))
   @Get('profile')
   async getProfile(@Request() req: any) {
-    // req.user.userId جاية من الـ JwtStrategy ديالك
-    // كنصيفطوها لـ AuthService باش يجبد لينا كاع معلومات اليوزر من Prisma
+    // كنجلبو البيانات كاملة من AuthService
     return this.authService.getProfile(req.user.userId || req.user.sub);
-  }
-
-  @UseGuards(AuthGuard('jwt'), RolesGuard)
-  @Roles('ADMIN')
-  @Get('admin-only')
-  getAdminData() {
-    return { message: "أهلاً بك أيها المدير، هادي بيانات سرية!" };
   }
 
   @Post('upload-avatar')
@@ -53,9 +44,6 @@ export class AuthController {
   async uploadFile(@UploadedFile() file: Express.Multer.File, @Request() req: any) {
     const imageUrl = `/uploads/profile-images/${file.filename}`;
     await this.authService.updateProfileImage(req.user.userId || req.user.sub, imageUrl);
-    return {
-      message: "تم رفع الصورة بنجاح",
-      url: imageUrl
-    };
+    return { message: "تم رفع الصورة بنجاح", url: imageUrl };
   }
 }

@@ -17,7 +17,7 @@ export default function RegisterPage() {
     lastName: '',
     email: '',
     password: '',
-    role: 'STUDENT', // غادي نعتبروه تلميذ كبداية
+    role: 'TEACHER', // غادي نعتبروه تلميذ كبداية
   });
 
   // 2. هاد الدالة كتحدث المعلومات كلما كتب شي حرف فشي خانة
