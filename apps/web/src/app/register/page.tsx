@@ -1,104 +1,102 @@
-'use client'; // هادي ضرورية حيت غنستعملو تفاعل المستخدم (كتابة، كليك)
+'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation'; // باش نحولو المستخدم لصفحة أخرى
+import { useRouter } from 'next/navigation';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import Link from 'next/link';
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"; // تأكد من تنصيب هاد الكومبوننت
 
 export default function RegisterPage() {
   const router = useRouter();
-  
-  // 1. هنا كنخبيو المعلومات اللي كيكتبها المستخدم
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
     email: '',
     password: '',
-    role: 'TEACHER', // غادي نعتبروه تلميذ كبداية
+    role: 'STUDENT', // القيمة الافتراضية
   });
 
-  // 2. هاد الدالة كتحدث المعلومات كلما كتب شي حرف فشي خانة
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  // 3. هاد الدالة كتخدم فاش كنكليكيو على "إنشاء حساب"
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault(); // باش الصفحة ماديرش ريفريش
-    
+    e.preventDefault();
     try {
-      // كنصيفطو المعلومات للباكاند ديالنا (NestJS) اللي خدام فـ 3000
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/register`, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+      const res = await fetch(`${apiUrl}/auth/register`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData), // كنحولو المعلومات لـ JSON
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData),
       });
 
       if (res.ok) {
-        alert("تم إنشاء الحساب بنجاح! 🎉");
-        router.push('/login'); // كندوزوه لصفحة تسجيل الدخول
+        router.push('/login');
       } else {
-        const errorData = await res.json();
-        alert("خطأ: " + (errorData.message || "تأكد من المعلومات ديالك"));
+        const error = await res.json();
+        alert(error.message || "فشل التسجيل");
       }
-    } catch (error) {
-      alert("مشكل فالاتصال! تأكد بلي السيرفر ديال الباكاند شاعل.");
+    } catch (err) {
+      console.error("خطأ:", err);
     }
   };
 
-  // 4. هنا كاين التصميم ديال الصفحة (HTML/Tailwind)
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50 p-4">
-      <Card className="w-full max-w-md shadow-lg">
-        
-        <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold text-blue-600">أستادي | Oustadi</CardTitle>
-          <CardDescription>أنشئ حسابك الجديد للبدء</CardDescription>
+    <div className="flex justify-center items-center min-h-screen bg-gray-100 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-1">
+          <CardTitle className="text-2xl text-center font-bold">إنشاء حساب جديد</CardTitle>
+          <CardDescription className="text-center">اختر نوع حسابك وانضم إلى أستادي</CardDescription>
         </CardHeader>
-
-        <CardContent>
-          {/* الفورم اللي كيعمر فيه المستخدم */}
-          <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit}>
+          <CardContent className="space-y-4">
             
+            {/* اختيار الدور - الجزء الجديد */}
+            <div className="flex flex-col space-y-2 py-2">
+              <Label className="text-right mb-2">أنا أريد التسجيل كـ:</Label>
+              <RadioGroup 
+                defaultValue="STUDENT" 
+                onValueChange={(value) => setFormData({...formData, role: value})}
+                className="flex justify-center gap-4"
+              >
+                <div className="flex items-center space-x-2 border p-3 rounded-lg cursor-pointer hover:bg-blue-50 transition-colors">
+                  <RadioGroupItem value="TEACHER" id="teacher" />
+                  <Label htmlFor="teacher" className="cursor-pointer font-bold text-blue-700">أستاذ</Label>
+                </div>
+                <div className="flex items-center space-x-2 border p-3 rounded-lg cursor-pointer hover:bg-green-50 transition-colors">
+                  <RadioGroupItem value="STUDENT" id="student" />
+                  <Label htmlFor="student" className="cursor-pointer font-bold text-green-700">تلميذ</Label>
+                </div>
+              </RadioGroup>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName">الاسم الأول</Label>
-                <Input id="firstName" name="firstName" required onChange={handleChange} />
+                <Label htmlFor="firstName">الاسم الشخصي</Label>
+                <Input id="firstName" placeholder="محمد" required 
+                  onChange={(e) => setFormData({...formData, firstName: e.target.value})} />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="lastName">النسب</Label>
-                <Input id="lastName" name="lastName" required onChange={handleChange} />
+                <Label htmlFor="lastName">الاسم العائلي</Label>
+                <Input id="lastName" placeholder="العلمي" required 
+                  onChange={(e) => setFormData({...formData, lastName: e.target.value})} />
               </div>
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="email">البريد الإلكتروني</Label>
-              <Input id="email" name="email" type="email" required onChange={handleChange} />
+              <Input id="email" type="email" placeholder="name@example.com" required 
+                onChange={(e) => setFormData({...formData, email: e.target.value})} />
             </div>
-            
+
             <div className="space-y-2">
-              <Label htmlFor="password">كلمة المرور</Label>
-              <Input id="password" name="password" type="password" required onChange={handleChange} />
+              <Label htmlFor="password">كلمة السر</Label>
+              <Input id="password" type="password" required 
+                onChange={(e) => setFormData({...formData, password: e.target.value})} />
             </div>
-
-            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              إنشاء حساب
-            </Button>
-            
-          </form>
-        </CardContent>
-
-        <CardFooter className="flex justify-center">
-          <p className="text-sm text-gray-600">
-            لديك حساب بالفعل؟ <Link href="/login" className="text-blue-600 hover:underline">تسجيل الدخول</Link>
-          </p>
-        </CardFooter>
-
+          </CardContent>
+          <CardFooter>
+            <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700">إنشاء الحساب</Button>
+          </CardFooter>
+        </form>
       </Card>
     </div>
   );
