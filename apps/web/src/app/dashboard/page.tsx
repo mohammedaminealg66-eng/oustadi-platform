@@ -256,7 +256,7 @@ export default function DashboardPage() {
                           <div className="mt-4 flex justify-between items-center">
                             <span className="font-bold">{teacher.hourlyPrice} درهم/ساعة</span>
                             {/* هنا زدنا الزر ديال إرسال الطلب */}
-                            <Button size="sm" onClick={() => handleSendRequest(teacher.user?.id)}>طلب درس</Button>
+                            <Button size="sm" onClick={() => handleSendRequest(teacher.userId)}>طلب درس</Button>
                           </div>
                         </Card>
                       ))}
