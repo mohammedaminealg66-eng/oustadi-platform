@@ -20,8 +20,10 @@ export default function DashboardPage() {
   const [searchSubject, setSearchSubject] = useState('');
   const [loadingTeachers, setLoadingTeachers] = useState(false);
 
-  // State جديد للطلبات
   const [requests, setRequests] = useState<any[]>([]);
+  
+  // State جديد ديال المفضلة
+  const [favorites, setFavorites] = useState<any[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -43,10 +45,7 @@ export default function DashboardPage() {
         }
 
         const resSubjects = await fetch(`${apiUrl}/subjects`);
-        if (resSubjects.ok) {
-          const subjectsData = await resSubjects.json();
-          setSubjects(subjectsData);
-        }
+        if (resSubjects.ok) setSubjects(await resSubjects.json());
       } catch (error) {
         console.error("Error fetching data:", error);
       } finally {
@@ -69,10 +68,7 @@ export default function DashboardPage() {
       const res = await fetch(`${apiUrl}/teachers?${params.toString()}`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setTeachers(data);
-      }
+      if (res.ok) setTeachers(await res.json());
     } catch (error) {
       console.error("خطأ فجلب الأساتذة:", error);
     } finally {
@@ -80,7 +76,6 @@ export default function DashboardPage() {
     }
   };
 
-  // دالة جلب الطلبات
   const fetchRequests = async () => {
     const token = localStorage.getItem('accessToken');
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
@@ -88,33 +83,39 @@ export default function DashboardPage() {
       const res = await fetch(`${apiUrl}/requests`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (res.ok) {
-        const data = await res.json();
-        setRequests(data);
-      }
-    } catch (error) {
-      console.error("Error fetching requests:", error);
-    }
+      if (res.ok) setRequests(await res.json());
+    } catch (error) {}
+  };
+
+  // دالة جلب المفضلة
+  const fetchFavorites = async () => {
+    const token = localStorage.getItem('accessToken');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    try {
+      const res = await fetch(`${apiUrl}/favorites`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (res.ok) setFavorites(await res.json());
+    } catch (error) {}
   };
 
   useEffect(() => {
     if (user) {
-      if (user.role === 'STUDENT') fetchTeachers();
-      fetchRequests(); // جيب الطلبات للأستاذ والتلميذ بجوج
+      if (user.role === 'STUDENT') {
+        fetchTeachers();
+        fetchFavorites(); // كنجيبو المفضلة غير للتلميذ
+      }
+      fetchRequests(); 
     }
   }, [user]);
 
-  // دالة إرسال الطلب (التلميذ)
   const handleSendRequest = async (teacherUserId: string) => {
     const token = localStorage.getItem('accessToken');
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     try {
       const res = await fetch(`${apiUrl}/requests`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ teacherId: teacherUserId })
       });
       if (res.ok) {
@@ -123,36 +124,36 @@ export default function DashboardPage() {
       } else {
         alert("وقع مشكل فإرسال الطلب.");
       }
-    } catch (error) {
-      console.error(error);
-    }
+    } catch (error) {}
   };
 
-  // دالة تحديث حالة الطلب (الأستاذ)
   const handleUpdateRequest = async (requestId: string, status: 'ACCEPTED' | 'REJECTED') => {
     const token = localStorage.getItem('accessToken');
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
     try {
       const res = await fetch(`${apiUrl}/requests/${requestId}`, {
         method: 'PATCH',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
       });
-      if (res.ok) {
-        alert("تم تحديث الطلب!");
-        fetchRequests();
-      }
-    } catch (error) {
-      console.error(error);
-    }
+      if (res.ok) fetchRequests();
+    } catch (error) {}
   };
 
-  const handleSaveProfile = async () => { /* ... الكود القديم بقى هو هو ... */ };
+  // دالة إضافة/إزالة من المفضلة
+  const handleToggleFavorite = async (teacherProfileId: string) => {
+    const token = localStorage.getItem('accessToken');
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    try {
+      const res = await fetch(`${apiUrl}/favorites`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ teacherProfileId })
+      });
+      if (res.ok) fetchFavorites(); // تحديث اللائحة بعد الإضافة/الإزالة
+    } catch (error) {}
+  };
 
-  // دالة صغيرة باش نترجمو الحالة للعربية
   const getStatusText = (status: string) => {
     if (status === 'PENDING') return <span className="text-yellow-600 font-bold">قيد الانتظار ⏳</span>;
     if (status === 'ACCEPTED') return <span className="text-green-600 font-bold">مقبول ✅</span>;
@@ -180,21 +181,16 @@ export default function DashboardPage() {
         {user.role === 'TEACHER' ? (
           <div className="space-y-6">
             <Card className="border-t-4 border-t-blue-500">
-              {/* ... هنا خلينا الكود ديال تحديث الملف الشخصي كيفما كان ... */}
               <CardHeader><CardTitle>إكمال الملف المهني</CardTitle></CardHeader>
               <CardContent>
                 <div className="text-sm text-gray-500 mb-4">هاد المعلومات كاتعاون التلاميذ يلقاوك. (دير حفظ باش تبان)</div>
-                <Button variant="outline" className="w-full" onClick={() => alert('لتحديث معلوماتك المرجو مراجعة الكود السابق وإضافته هنا أو الاحتفاظ بالمعلومات كما هي')}>
-                  تحديث الملف الشخصي (مخفي مؤقتاً لتصغير الكود)
-                </Button>
+                <Button variant="outline" className="w-full">تحديث الملف الشخصي (مخفي مؤقتاً لتصغير الكود)</Button>
               </CardContent>
             </Card>
 
-            {/* قسم الطلبات الخاص بالأستاذ */}
             <Card className="border-t-4 border-t-purple-500">
               <CardHeader>
                 <CardTitle>طلبات الدروس ({requests.length})</CardTitle>
-                <CardDescription>التلاميذ اللي بغاو يقراو عندك</CardDescription>
               </CardHeader>
               <CardContent>
                 {requests.length === 0 ? <p className="text-gray-500">ماكاين حتى طلب حالياً.</p> : (
@@ -203,7 +199,6 @@ export default function DashboardPage() {
                       <div key={req.id} className="flex flex-col md:flex-row justify-between items-center p-4 border rounded-lg bg-gray-50">
                         <div>
                           <p className="font-bold">{req.student?.firstName} {req.student?.lastName}</p>
-                          <p className="text-sm text-gray-500">{req.student?.email}</p>
                           <p className="mt-1 text-sm">{getStatusText(req.status)}</p>
                         </div>
                         {req.status === 'PENDING' && (
@@ -224,7 +219,6 @@ export default function DashboardPage() {
             <Card className="border-t-4 border-t-green-500">
               <CardHeader>
                 <CardTitle>البحث عن أستاذ</CardTitle>
-                <CardDescription>قلب على الأستاذ المناسب ليك بالمدينة والمادة</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -248,25 +242,64 @@ export default function DashboardPage() {
                   <h3 className="text-xl font-bold mb-4">النتائج ({teachers.length})</h3>
                   {loadingTeachers ? <p className="text-gray-500">جاري البحث...</p> : (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {teachers.map((teacher) => (
-                        <Card key={teacher.id} className="p-4 border shadow-sm">
-                          <h4 className="font-bold text-lg">{teacher.user?.firstName} {teacher.user?.lastName}</h4>
-                          <p className="text-sm text-blue-600 font-semibold">{teacher.subject?.name} - {teacher.city}</p>
-                          <p className="text-gray-600 text-sm mt-2 line-clamp-2">{teacher.bio}</p>
-                          <div className="mt-4 flex justify-between items-center">
-                            <span className="font-bold">{teacher.hourlyPrice} درهم/ساعة</span>
-                            {/* هنا زدنا الزر ديال إرسال الطلب */}
-                            <Button size="sm" onClick={() => handleSendRequest(teacher.userId)}>طلب درس</Button>
-                          </div>
-                        </Card>
-                      ))}
+                      {teachers.map((teacher) => {
+                        // كنفحصو واش الأستاذ كاين فالمفضلة
+                        const isFavorite = favorites.some(fav => fav.teacherProfileId === teacher.id);
+                        
+                        return (
+                          <Card key={teacher.id} className="p-4 border shadow-sm relative">
+                            {/* بوطونة المفضلة */}
+                            <button 
+                              onClick={() => handleToggleFavorite(teacher.id)}
+                              className="absolute top-4 left-4 text-2xl hover:scale-110 transition-transform"
+                              title={isFavorite ? "إزالة من المفضلة" : "إضافة للمفضلة"}
+                            >
+                              {isFavorite ? '❤️' : '🤍'}
+                            </button>
+
+                            <h4 className="font-bold text-lg pr-8">{teacher.user?.firstName} {teacher.user?.lastName}</h4>
+                            <p className="text-sm text-blue-600 font-semibold">{teacher.subject?.name} - {teacher.city}</p>
+                            <p className="text-gray-600 text-sm mt-2 line-clamp-2">{teacher.bio}</p>
+                            <div className="mt-4 flex justify-between items-center">
+                              <span className="font-bold">{teacher.hourlyPrice} درهم/ساعة</span>
+                              <Button size="sm" onClick={() => handleSendRequest(teacher.userId)}>طلب درس</Button>
+                            </div>
+                          </Card>
+                        )
+                      })}
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
 
-            {/* قسم الطلبات الخاص بالتلميذ */}
+            {/* قسم أساتذتي المفضلين (الجديد) */}
+            <Card className="border-t-4 border-t-pink-500">
+              <CardHeader>
+                <CardTitle>أساتذتي المفضلين ❤️ ({favorites.length})</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {favorites.length === 0 ? <p className="text-gray-500">مازال ما ضفتي حتى أستاذ للمفضلة.</p> : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {favorites.map((fav) => (
+                      <Card key={fav.id} className="p-4 border shadow-sm bg-pink-50/30 relative">
+                         <button 
+                              onClick={() => handleToggleFavorite(fav.teacherProfileId)}
+                              className="absolute top-4 left-4 text-2xl hover:scale-110 transition-transform"
+                              title="إزالة من المفضلة"
+                            >
+                              ❤️
+                            </button>
+                        <h4 className="font-bold">{fav.teacherProfile?.user?.firstName} {fav.teacherProfile?.user?.lastName}</h4>
+                        <p className="text-sm text-gray-600">{fav.teacherProfile?.subject?.name} - {fav.teacherProfile?.city}</p>
+                        <Button className="mt-4 w-full" size="sm" onClick={() => handleSendRequest(fav.teacherProfile?.user?.id)}>طلب درس</Button>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
             <Card className="border-t-4 border-t-purple-500">
               <CardHeader>
                 <CardTitle>طلباتي ({requests.length})</CardTitle>
@@ -278,7 +311,6 @@ export default function DashboardPage() {
                       <div key={req.id} className="flex justify-between items-center p-4 border rounded-lg bg-gray-50">
                         <div>
                           <p className="font-bold">الأستاذ: {req.teacher?.firstName} {req.teacher?.lastName}</p>
-                          <p className="text-sm text-gray-500">{new Date(req.createdAt).toLocaleDateString('ar-MA')}</p>
                         </div>
                         <div>{getStatusText(req.status)}</div>
                       </div>
