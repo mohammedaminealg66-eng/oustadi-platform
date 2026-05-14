@@ -6,6 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+// 👈 هاهي الإضافة ديالنا: جبنا الكومبوننت ديال الجرس
+import NotificationBell from "@/components/ui/NotificationBell";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -161,9 +163,13 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 p-4 md:p-8" dir="rtl">
       <div className="max-w-5xl mx-auto space-y-6">
         
+        {/* 👈 هاد البلاصة فين زدنا الجرس (NotificationBell) حدا زر الخروج */}
         <div className="flex justify-between items-center bg-white p-4 rounded-xl shadow-sm border">
           <h1 className="text-2xl font-bold text-blue-600">أستادي | Oustadi</h1>
-          <Button onClick={() => { localStorage.removeItem('accessToken'); router.push('/login'); }} variant="outline">تسجيل الخروج</Button>
+          <div className="flex items-center gap-4">
+            <NotificationBell token={typeof window !== 'undefined' ? localStorage.getItem('accessToken') || '' : ''} />
+            <Button onClick={() => { localStorage.removeItem('accessToken'); router.push('/login'); }} variant="outline">تسجيل الخروج</Button>
+          </div>
         </div>
 
         <div className="bg-white p-6 rounded-xl shadow-sm border">

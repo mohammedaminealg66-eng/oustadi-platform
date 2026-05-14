@@ -1,17 +1,30 @@
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../prisma.service'; // المسار الصحيح
+import { NotificationsService } from '../notifications/notifications.service'; // 👈 زدنا هادي
 
 @Injectable()
 export class RequestsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private notificationsService: NotificationsService // 👈 دخلناها هنا
+  ) {}
 
   async createRequest(studentId: string, teacherId: string) {
-    return this.prisma.lessonRequest.create({
+    // 1. كريي الطلب
+    const request = await this.prisma.lessonRequest.create({
       data: {
         studentId,
         teacherId,
       },
     });
+
+    // 2. صيفط إشعار للأستاذ
+    await this.notificationsService.createNotification(
+      teacherId,
+      'عندك طلب درس جديد من تلميذ! 📚'
+    );
+
+    return request;
   }
 
   async getRequests(userId: string, role: string) {
@@ -37,9 +50,19 @@ export class RequestsService {
       throw new UnauthorizedException("ماعندكش الصلاحية تبدل هاد الطلب");
     }
 
-    return this.prisma.lessonRequest.update({
+    // 1. بدل حالة الطلب
+    const updatedRequest = await this.prisma.lessonRequest.update({
       where: { id: requestId },
       data: { status },
     });
+
+    // 2. صيفط إشعار للتلميذ
+    const statusText = status === 'ACCEPTED' ? 'مقبول ✅' : 'مرفوض ❌';
+    await this.notificationsService.createNotification(
+      request.studentId, // كنصيفطوه للتلميذ اللي دار الطلب
+      `تم تحديث حالة طلبك إلى: ${statusText}`
+    );
+
+    return updatedRequest;
   }
 }

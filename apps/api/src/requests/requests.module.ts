@@ -1,10 +1,11 @@
 import { Module } from '@nestjs/common';
 import { RequestsService } from './requests.service';
 import { RequestsController } from './requests.controller';
-import { PrismaService } from '../prisma.service'; // المسار الصحيح
+import { NotificationsModule } from '../notifications/notifications.module'; // 👈 هادي
 
 @Module({
+  imports: [NotificationsModule], // 👈 وهادي
   controllers: [RequestsController],
-  providers: [RequestsService, PrismaService], // زدناها نيشان هنا
+  providers: [RequestsService],
 })
 export class RequestsModule {}
