@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { getNotifications, markNotificationAsRead } from '../lib/notificationsApi';
+import { getNotifications, markNotificationAsRead } from '@/lib/notificationsApi';
 
 // هادي باش نحددو الشكل ديال الإشعار
 interface Notification {
