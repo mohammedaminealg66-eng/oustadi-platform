@@ -10,6 +10,7 @@ import { join } from 'path';
 import { StudentsModule } from './students/students.module'; // 1. هادي راك زدتيها مزيان
 import { RequestsModule } from './requests/requests.module';
 import { FavoritesModule } from './favorites/favorites.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -22,7 +23,8 @@ import { FavoritesModule } from './favorites/favorites.module';
     SubjectsModule,
     StudentsModule,
     RequestsModule,
-    FavoritesModule, // 2. هادي هي اللي كانت ناقصاك وسط المصفوفة
+    FavoritesModule,
+    NotificationsModule, // 2. هادي هي اللي كانت ناقصاك وسط المصفوفة
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],

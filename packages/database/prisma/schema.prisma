@@ -21,26 +21,27 @@ enum RequestStatus {
 
 // 1. جدول المستخدمين
 model User {
-  id               String          @id @default(uuid())
-  email            String          @unique
+  id               String           @id @default(uuid())
+  email            String           @unique
   password         String
   firstName        String
   lastName         String
-  role             Role            @default(STUDENT)
-  isVerified       Boolean         @default(false)
+  role             Role             @default(STUDENT)
+  isVerified       Boolean          @default(false)
   profileImage     String?
-  city             String?         // تزادت هنا
-  createdAt        DateTime        @default(now())
-  updatedAt        DateTime        @updatedAt
+  city             String?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   // العلاقات
   teacherProfile   TeacherProfile?
-  requestsSent     LessonRequest[] @relation("StudentRequests")
-  requestsReceived LessonRequest[] @relation("TeacherRequests")
-  favorites        Favorite[]      // تزادت هنا
+  requestsSent     LessonRequest[]  @relation("StudentRequests")
+  requestsReceived LessonRequest[]  @relation("TeacherRequests")
+  favorites        Favorite[]
+  notifications    Notification[]   // هادي هي اللي تزادت باش نربطو الإشعارات بالمستخدم
 }
 
-// 2. جدول المواد (الرياضيات، الفيزياء...)
+// 2. جدول المواد
 model Subject {
   id       String           @id @default(uuid())
   name     String           @unique
@@ -49,18 +50,15 @@ model Subject {
 
 // 3. جدول بروفايل الأستاذ
 model TeacherProfile {
-  id          String     @id @default(uuid())
-  userId      String     @unique
-  user        User       @relation(fields: [userId], references: [id])
-
-  bio         String?
-  hourlyPrice Float?
-  city        String?
-
-  subjectId   String?
-  subject     Subject?   @relation(fields: [subjectId], references: [id])
-  
-  favoritedBy Favorite[] // تزادت هنا
+  id           String     @id @default(uuid())
+  userId       String     @unique
+  user         User       @relation(fields: [userId], references: [id])
+  bio          String?
+  hourlyPrice  Float?
+  city         String?
+  subjectId    String?
+  subject      Subject?   @relation(fields: [subjectId], references: [id])
+  favoritedBy  Favorite[]
 }
 
 // 4. جدول طلبات الدروس
@@ -68,24 +66,30 @@ model LessonRequest {
   id        String        @id @default(uuid())
   studentId String
   student   User          @relation("StudentRequests", fields: [studentId], references: [id])
-
   teacherId String
   teacher   User          @relation("TeacherRequests", fields: [teacherId], references: [id])
-
   status    RequestStatus @default(PENDING)
   createdAt DateTime      @default(now())
 }
 
-// 5. جدول المفضلة (الجديد)
+// 5. جدول المفضلة
 model Favorite {
   id               String         @id @default(uuid())
   userId           String
   user             User           @relation(fields: [userId], references: [id])
-  
   teacherProfileId String
   teacherProfile   TeacherProfile @relation(fields: [teacherProfileId], references: [id])
-  
   createdAt        DateTime       @default(now())
 
   @@unique([userId, teacherProfileId])
+}
+
+// 6. جدول الإشعارات (الجديد 🔔)
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String   // الشخص اللي غيوصلو الإشعار
+  user      User     @relation(fields: [userId], references: [id])
+  content   String   // نص الإشعار (مثلا: "واش أستاذ، عندك طلب جديد")
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
 }
