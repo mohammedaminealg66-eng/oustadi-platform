@@ -8,6 +8,7 @@ import { SubjectsModule } from './subjects/subjects.module';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { StudentsModule } from './students/students.module'; // 1. هادي راك زدتيها مزيان
+import { RequestsModule } from './requests/requests.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { StudentsModule } from './students/students.module'; // 1. هادي را
     AuthModule, 
     TeachersModule, 
     SubjectsModule,
-    StudentsModule, // 2. هادي هي اللي كانت ناقصاك وسط المصفوفة
+    StudentsModule,
+    RequestsModule, // 2. هادي هي اللي كانت ناقصاك وسط المصفوفة
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
