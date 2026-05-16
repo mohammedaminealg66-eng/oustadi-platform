@@ -11,6 +11,7 @@ import { StudentsModule } from './students/students.module'; // 1. هادي را
 import { RequestsModule } from './requests/requests.module';
 import { FavoritesModule } from './favorites/favorites.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { UploadModule } from './upload/upload.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     RequestsModule,
     FavoritesModule,
     NotificationsModule, // 2. هادي هي اللي كانت ناقصاك وسط المصفوفة
+    UploadModule,
   ],
   controllers: [AppController],
   providers: [AppService, PrismaService],
